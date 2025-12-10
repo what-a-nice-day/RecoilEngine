@@ -661,6 +661,14 @@ typedef struct global_State {
   MRef ctype_state;	/* Pointer to C type state. */
   PRNGState prng;	/* Global PRNG state. */
   GCRef gcroot[GCROOT_MAX];  /* GC roots. */
+
+  //SPRING additions
+  lua_Func_fopen  fopen_func;
+  lua_Func_popen  popen_func;
+  lua_Func_pclose pclose_func;
+  lua_Func_system system_func;
+  lua_Func_remove remove_func;
+  lua_Func_rename rename_func;
 } global_State;
 
 #define mainthread(g)	(&gcref(g->mainthref)->th)
@@ -705,7 +713,8 @@ struct lua_State {
 };
 
 #define G(L)			(mref(L->glref, global_State))
-#define registry(L)		(&G(L)->registrytv)
+/* name conflict */
+#define lua_registry(L)		(&G(L)->registrytv)
 
 /* Macros to access the currently executing (Lua) function. */
 #if LJ_GC64

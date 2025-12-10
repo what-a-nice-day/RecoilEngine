@@ -310,6 +310,19 @@ static GCstr *lj_str_alloc(lua_State *L, const char *str, MSize len,
   return s;  /* Return newly interned string. */
 }
 
+/* SPRING */
+StrHash (lua_calchash) (const char *str, size_t l) {
+  if (l-1 < LJ_MAX_STR-1) {
+    MSize len = (MSize)l;
+    // only correct if LUAJIT_SECURITY_STRHASH is disabled
+    // and DLUAJIT_SECURITY_PRNG is disabled
+    StrHash hash = hash_sparse(7274869747698397528ULL, str, len);
+    return hash;
+  } else { // error, string length overflow int
+    return 0;
+  }
+}
+ 
 /* Intern a string and return string object. */
 GCstr *lj_str_new(lua_State *L, const char *str, size_t lenx)
 {

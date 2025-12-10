@@ -43,6 +43,16 @@ typedef struct IOFileUD {
 #define IOSTDF_UD(L, id)	(&gcref(G(L)->gcroot[(id)])->ud)
 #define IOSTDF_IOF(L, id)	((IOFileUD *)uddata(IOSTDF_UD(L, (id))))
 
+/* -- SPRING ------------------------------------------------------------- */
+static FILE* lua_fopen(lua_State* L, const char* filename, const char* mode)
+{
+  if (G(L)->fopen_func) {
+    return G(L)->fopen_func(L, filename, mode);
+  }
+  errno = EIO; /* why not? */
+  return NULL;
+}
+
 /* -- Open/close helpers -------------------------------------------------- */
 
 static IOFileUD *io_tofilep(lua_State *L)
@@ -85,7 +95,7 @@ static IOFileUD *io_file_open(lua_State *L, const char *mode)
 {
   const char *fname = strdata(lj_lib_checkstr(L, 1));
   IOFileUD *iof = io_file_new(L);
-  iof->fp = fopen(fname, mode);
+  iof->fp = lua_fopen(L, fname, mode); //SPRING
   if (iof->fp == NULL)
     luaL_argerror(L, 1, lj_strfmt_pushf(L, "%s: %s", fname, strerror(errno)));
   return iof;
@@ -415,7 +425,7 @@ LJLIB_CF(io_open)
   GCstr *s = lj_lib_optstr(L, 2);
   const char *mode = s ? strdata(s) : "r";
   IOFileUD *iof = io_file_new(L);
-  iof->fp = fopen(fname, mode);
+  iof->fp = lua_fopen(L, fname, mode); //SPRING
   return iof->fp != NULL ? 1 : luaL_fileresult(L, 0, fname);
 }
 

@@ -25,7 +25,7 @@
 
 LJLIB_CF(debug_getregistry)
 {
-  copyTV(L, L->top++, registry(L));
+  copyTV(L, L->top++, lua_registry(L));
   return 1;
 }
 

@@ -2,6 +2,7 @@
 
 #ifndef lua_privileges_h
 #define lua_privileges_h
+#include "../src/lua.h"
 
 LUALIB_API int (luaL_loadbuffer_privileged) (lua_State *L, const char *buff, size_t sz,
                                   const char *name, bool privileged);

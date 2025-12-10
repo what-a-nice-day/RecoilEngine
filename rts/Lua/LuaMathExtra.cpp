@@ -8,7 +8,7 @@
 
 #include "System/Misc/TracyDefs.h"
 
-static const lua_Number POWERS_OF_TEN[] = {1.0f, 10.0f, 100.0f, 1000.0f, 10000.0f, 100000.0f, 1000000.0f, 10000000.0f};
+static const float POWERS_OF_TEN[] = {1.0f, 10.0f, 100.0f, 1000.0f, 10000.0f, 100000.0f, 1000000.0f, 10000000.0f};
 
 /******************************************************************************
  * math extensions
@@ -85,7 +85,7 @@ int LuaMathExtra::hypot(lua_State* L) {
  */
 int LuaMathExtra::diag(lua_State* L) {
 	RECOIL_DETAILED_TRACY_ZONE;
-	lua_Number res = 0.0f;
+	float res = 0.0f;
 
 	for (int i = lua_gettop(L); i >= 1; i--) {
 		res += Square(luaL_checknumber_noassert(L, i));
@@ -106,8 +106,8 @@ int LuaMathExtra::diag(lua_State* L) {
  */
 int LuaMathExtra::clamp(lua_State* L) {
 	RECOIL_DETAILED_TRACY_ZONE;
-	const lua_Number lbound = luaL_checknumber_noassert(L, 2);
-	const lua_Number ubound = luaL_checknumber_noassert(L, 3);
+	const float lbound = luaL_checknumber_noassert(L, 2);
+	const float ubound = luaL_checknumber_noassert(L, 3);
 
 	if (lbound > ubound) {
 		luaL_error(L, "Invalid math.%s parameters, lower bound(%f) is greater than upper bound(%f)", __func__, lbound, ubound);
@@ -127,7 +127,7 @@ int LuaMathExtra::clamp(lua_State* L) {
  */
 int LuaMathExtra::sgn(lua_State* L) {
 	RECOIL_DETAILED_TRACY_ZONE;
-	const lua_Number x = luaL_checknumber_noassert(L, 1);
+	const float x = luaL_checknumber_noassert(L, 1);
 
 	if (x != 0.0f) {
 		// engine's version returns -1 for sgn(0)
@@ -150,9 +150,9 @@ int LuaMathExtra::sgn(lua_State* L) {
  */
 int LuaMathExtra::mix(lua_State* L) {
 	RECOIL_DETAILED_TRACY_ZONE;
-	const lua_Number x = luaL_checknumber_noassert(L, 1);
-	const lua_Number y = luaL_checknumber_noassert(L, 2);
-	const lua_Number a = luaL_checknumber_noassert(L, 3);
+	const float x = luaL_checknumber_noassert(L, 1);
+	const float y = luaL_checknumber_noassert(L, 2);
+	const float a = luaL_checknumber_noassert(L, 3);
 
 	lua_pushnumber(L, ::mix(x, y, a));
 	return 1;
@@ -171,7 +171,7 @@ int LuaMathExtra::mix(lua_State* L) {
  */
 int LuaMathExtra::round(lua_State* L) {
 	RECOIL_DETAILED_TRACY_ZONE;
-	const lua_Number x = luaL_checknumber_noassert(L, 1);
+	const float x = luaL_checknumber_noassert(L, 1);
 
 	if (lua_gettop(L) > 1) {
 		// round number to <n> decimals
@@ -180,8 +180,8 @@ int LuaMathExtra::round(lua_State* L) {
 		const int i = std::min(7, int(sizeof(POWERS_OF_TEN) / sizeof(float)) - 1);
 		const int n = std::clamp(luaL_checkint(L, 2), 0, i);
 
-		const lua_Number xinteg = math::floor(x);
-		const lua_Number xfract = x - xinteg;
+		const float xinteg = math::floor(x);
+		const float xfract = x - xinteg;
 
 		lua_pushnumber(L, xinteg + math::floor((xfract * POWERS_OF_TEN[n]) + 0.5f) / POWERS_OF_TEN[n]);
 	} else {
@@ -232,7 +232,7 @@ int LuaMathExtra::smoothstep(lua_State* L) {
 int LuaMathExtra::normalize(lua_State* L)
 {
 	RECOIL_DETAILED_TRACY_ZONE;
-	lua_Number res = 0.0f;
+	float res = 0.0f;
 	const int param = lua_gettop(L);
 	for (int i = param; i >= 1; i--) {
 		res += Square(luaL_checknumber_noassert(L, i));

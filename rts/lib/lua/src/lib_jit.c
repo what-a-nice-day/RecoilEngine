@@ -544,7 +544,7 @@ static void jit_profile_callback(lua_State *L2, lua_State *L, int samples,
   TValue key;
   cTValue *tv;
   key.u64 = KEY_PROFILE_FUNC;
-  tv = lj_tab_get(L, tabV(registry(L)), &key);
+  tv = lj_tab_get(L, tabV(lua_registry(L)), &key);
   if (tvisfunc(tv)) {
     char vmst = (char)vmstate;
     int status;
@@ -564,7 +564,7 @@ static void jit_profile_callback(lua_State *L2, lua_State *L, int samples,
 /* profile.start(mode, cb) */
 LJLIB_CF(jit_profile_start)
 {
-  GCtab *registry = tabV(registry(L));
+  GCtab *registry = tabV(lua_registry(L));
   GCstr *mode = lj_lib_optstr(L, 1);
   GCfunc *func = lj_lib_checkfunc(L, 2);
   lua_State *L2 = lua_newthread(L);  /* Thread that runs profiler callback. */
@@ -586,7 +586,7 @@ LJLIB_CF(jit_profile_stop)
   GCtab *registry;
   TValue key;
   luaJIT_profile_stop(L);
-  registry = tabV(registry(L));
+  registry = tabV(lua_registry(L));
   key.u64 = KEY_PROFILE_THREAD;
   setnilV(lj_tab_set(L, registry, &key));
   key.u64 = KEY_PROFILE_FUNC;

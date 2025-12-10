@@ -7,11 +7,11 @@
 #include <cstring> // strlen
 #include <cassert>
 
-#include "LuaUser.h"
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-#include "lib/lua/src/lstate.h"
+#include "lib/lua/include/LuaUser.h"
+#include "lib/lua/include/lua.h"
+#include "lib/lua/include/lualib.h"
+#include "lib/lua/include/lauxlib.h"
+#include "lib/lua/include/lj_state.h"
 #include "lib/streflop/streflop_cond.h"
 #include "System/Log/ILog.h"
 #include "System/BranchPrediction.h"
@@ -147,8 +147,8 @@ static inline int luaS_absIndex(lua_State* L, const int i)
 template<typename T>
 static inline T luaL_SpringOpt(lua_State* L, int idx, const T def, T(*lua_optFoo)(lua_State*, int, const T), T(*lua_toFoo)(lua_State*, int), int typeFoo, const char* caller)
 {
-	if (L->errorJmp)
-		return (*lua_optFoo)(L, idx, def);
+	// if (L->errorJmp)
+	// 	return (*lua_optFoo)(L, idx, def);
 
 	T ret = (*lua_toFoo)(L, idx);
 	if (ret || (lua_type(L, idx) == typeFoo))
@@ -163,8 +163,8 @@ static inline T luaL_SpringOpt(lua_State* L, int idx, const T def, T(*lua_optFoo
 
 static inline std::string luaL_SpringOptString(lua_State* L, int idx, const std::string& def, std::string(*lua_optFoo)(lua_State*, int, const std::string&), std::string(*lua_toFoo)(lua_State*, int), int typeFoo, const char* caller)
 {
-	if (L->errorJmp)
-		return (*lua_optFoo)(L, idx, def);
+	// if (L->errorJmp)
+	// 	return (*lua_optFoo)(L, idx, def);
 
 	std::string ret = (*lua_toFoo)(L, idx);
 	if (!ret.empty() || (lua_type(L, idx) == typeFoo))
@@ -179,8 +179,8 @@ static inline std::string luaL_SpringOptString(lua_State* L, int idx, const std:
 
 static inline const char* luaL_SpringOptCString(lua_State* L, int idx, const char* def, size_t* len, const char*(*lua_optFoo)(lua_State*, int, const char*, size_t*), const char*(*lua_toFoo)(lua_State*, int, size_t*), int typeFoo, const char* caller)
 {
-	if (L->errorJmp)
-		return (*lua_optFoo)(L, idx, def, len);
+	// if (L->errorJmp)
+	// 	return (*lua_optFoo)(L, idx, def, len);
 
 	const char* ret = (*lua_toFoo)(L, idx, len);
 	if (ret || (lua_type(L, idx) == typeFoo))
@@ -197,10 +197,10 @@ static inline const char* luaL_SpringOptCString(lua_State* L, int idx, const cha
 
 
 #define luaL_optboolean(L,idx,def)     (luaL_SpringOpt<bool>(L,idx,def,::luaL_optboolean,lua_toboolean,LUA_TBOOLEAN,__FUNCTION__))
-#define luaL_optfloat(L,idx,def)       ((float)luaL_SpringOpt<lua_Number>(L,idx,def,::luaL_optfloat,lua_tofloat,LUA_TNUMBER,__FUNCTION__))
+#define luaL_optfloat(L,idx,def)       ((float)luaL_SpringOpt<float>(L,idx,def,::luaL_optfloat,lua_tofloat,LUA_TNUMBER,__FUNCTION__))
 #define luaL_optinteger(L,idx,def)     (luaL_SpringOpt<lua_Integer>(L,idx,def,::luaL_optinteger,lua_tointeger,LUA_TNUMBER,__FUNCTION__))
 #define luaL_optlstring(L,idx,def,len) (luaL_SpringOptCString(L,idx,def,len,::luaL_optlstring,lua_tolstring,LUA_TSTRING,__FUNCTION__))
-#define luaL_optnumber(L,idx,def)      (luaL_SpringOpt<lua_Number>(L,idx,def,::luaL_optnumber,lua_tonumber,LUA_TNUMBER,__FUNCTION__))
+#define luaL_optnumber(L,idx,def)      (luaL_SpringOpt<float>(L,idx,def,::luaL_optnumber,lua_tonumber,LUA_TNUMBER,__FUNCTION__))
 
 #define luaL_optsstring(L,idx,def)     (luaL_SpringOptString(L,idx,def,::luaL_optsstring,luaL_tosstring,LUA_TSTRING,__FUNCTION__))
 
@@ -223,7 +223,7 @@ struct luaContextData;
 
 static inline luaContextData* GetLuaContextData(const lua_State* L)
 {
-	return reinterpret_cast<luaContextData*>(G(L)->ud);
+	return reinterpret_cast<luaContextData*>(G(L)->allocd);
 }
 
 static inline lua_State* LUA_OPEN(luaContextData* lcd) {

@@ -36,7 +36,8 @@ RUN apt-get update;apt-get install -y \
         sed \
         unzip \
         wget \
-        xz-utils
+        xz-utils \
+        gcc
 
 # Install MXE and build cross-compile windows gcc
 RUN cd /; \

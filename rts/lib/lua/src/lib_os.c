@@ -172,7 +172,7 @@ LJLIB_CF(os_date)
 {
   const char *s = luaL_optstring(L, 1, "%c");
   time_t t = lua_isnoneornil(L, 2) ? time(NULL) :
-	     lj_num2int_type(luaL_checknumber(L, 2), time_t);
+	     lj_num2int_type(luaL_checknumber_double(L, 2), time_t);
   struct tm *stm;
 #if LJ_TARGET_POSIX
   struct tm rtm;
@@ -248,15 +248,15 @@ LJLIB_CF(os_time)
   if (t == (time_t)(-1))
     lua_pushnil(L);
   else
-    lua_pushnumber(L, (lua_Number)t);
+    lua_pushnumber_double(L, (lua_Number)t);
   return 1;
 }
 
 LJLIB_CF(os_difftime)
 {
-  lua_pushnumber(L,
-    difftime(lj_num2int_type(luaL_checknumber(L, 1), time_t),
-	     lj_num2int_type(luaL_optnumber(L, 2, (lua_Number)0), time_t)));
+  lua_pushnumber_double(L,
+    difftime(lj_num2int_type(luaL_checknumber_double(L, 1), time_t),
+	     lj_num2int_type(luaL_optnumber_double(L, 2, (lua_Number)0), time_t)));
   return 1;
 }
 

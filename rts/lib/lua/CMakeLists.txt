@@ -1,54 +1,57 @@
 # Spring supplied CMake build file
+cmake_minimum_required(VERSION 3.10)
+project(LuaJITSpring CXX C)
 
-# deactivate signaling-NANs for this library
-remove_flag("-fsignaling-nans")
 
-INCLUDE_DIRECTORIES(BEFORE ../streflop include)
+set(LUAJIT_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(LUAJIT_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-SET(luaSources
-		"src/lapi.cpp"
-		"src/lauxlib.cpp"
-		"src/lbaselib.cpp"
-		"src/lcode.cpp"
-		"src/ldblib.cpp"
-		"src/ldebug.cpp"
-		"src/ldo.cpp"
-		"src/ldump.cpp"
-		"src/lfunc.cpp"
-		"src/lgc.cpp"
-		"src/linit.cpp"
-		"src/liolib.cpp"
-		"src/llex.cpp"
-		"src/lmathlib.cpp"
-		"src/lmem.cpp"
-		"src/loadlib.cpp"
-		"src/lobject.cpp"
-		"src/lopcodes.cpp"
-		"src/loslib.cpp"
-		"src/lparser.cpp"
-		"src/lstate.cpp"
-		"src/lstring.cpp"
-		"src/lstrlib.cpp"
-		"src/ltable.cpp"
-		"src/ltablib.cpp"
-		"src/ltm.cpp"
-		"src/lundump.cpp"
-		"src/lvm.cpp"
-		"src/lzio.cpp"
-		"src/print.cpp"
-		"src/lua_privileges.cpp"
-		"include/LuaUser.cpp"
-	)
+find_program(MAKE_EXE make)
+set(LUAJIT_BUILD_DIR ${CMAKE_BINARY_DIR}/luajit_build)
+set(LUAJIT_OUTPUT ${LUAJIT_BUILD_DIR}/src/libluajit.a)
 
-ADD_LIBRARY(lua STATIC EXCLUDE_FROM_ALL ${luaSources})
+file(COPY ${LUAJIT_SRC_DIR}/ DESTINATION ${LUAJIT_BUILD_DIR})
 
-if (ENABLE_STREFLOP)
-TARGET_LINK_LIBRARIES(lua streflop)
-else ()
-TARGET_LINK_LIBRARIES(lua)
-endif ()
+# DLUAJIT_DISABLE_JIT
+add_custom_command(
+    OUTPUT ${LUAJIT_OUTPUT}
+    COMMAND ${MAKE_EXE}
+            -C ${LUAJIT_BUILD_DIR}
+            BUILDMODE=static
+            CC=gcc-13
+            "XCFLAGS=-DLUAJIT_SECURITY_PRNG=0 -DLUAJIT_SECURITY_STRHASH=0 -fPIC -DPIC"
+    WORKING_DIRECTORY ${LUAJIT_BUILD_DIR}
+    COMMENT "Building LuaJIT using its Makefile"
+    VERBATIM
+)
+add_custom_target(build_luajit ALL
+    DEPENDS ${LUAJIT_OUTPUT}
+)
+add_library(luajit_core STATIC IMPORTED GLOBAL)
+set_target_properties(luajit_core PROPERTIES
+    IMPORTED_LOCATION ${LUAJIT_OUTPUT}
+    INTERFACE_INCLUDE_DIRECTORIES ${LUAJIT_INC_DIR}
+)
 
-target_include_directories(lua PUBLIC include)
+add_dependencies(luajit_core build_luajit)
+
+add_library(luajit_spring STATIC
+    ${LUAJIT_INC_DIR}/LuaUser.cpp
+    ${LUAJIT_INC_DIR}/lua_priviledges.cpp
+)
+target_include_directories(luajit_spring PUBLIC
+    ${LUAJIT_INC_DIR}
+)
+
+add_library(lua INTERFACE)
+target_include_directories(lua INTERFACE
+    ${LUAJIT_INC_DIR}       
+)
+target_link_libraries(lua
+    INTERFACE luajit_core
+    INTERFACE luajit_spring
+)
+
 
 if (UNIX)
 	SET_TARGET_PROPERTIES(lua PROPERTIES COMPILE_FLAGS "-DLUA_USE_MKSTEMP ${PIC_FLAG}")

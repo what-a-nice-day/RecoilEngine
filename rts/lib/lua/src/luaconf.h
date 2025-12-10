@@ -102,8 +102,14 @@
 #define LUA_MAXINPUT	512	/* Max. input line length. */
 #endif
 
+// FIXME: remove these functions
+#define lua_lock(L)			((void)L)
+#define lua_unlock(L)			((void)L)
+
 /* Note: changing the following defines breaks the Lua 5.1 ABI. */
-#define LUA_INTEGER	ptrdiff_t
+// #define LUA_INTEGER	ptrdiff_t
+//SPRING we must use the same size for 64 and 32 bit. 32 bit int should be enough
+#define LUA_INTEGER	int
 #define LUA_IDSIZE	60	/* Size of lua_Debug.short_src. */
 /*
 ** Size of lauxlib and io.* on-stack buffers. Weird workaround to avoid using
@@ -116,7 +122,8 @@
 ** from the standard Lua distribution. They must not be changed for LuaJIT.
 */
 #define LUA_NUMBER_DOUBLE
-#define LUA_NUMBER		double
+
+#define LUA_NUMBER	double
 #define LUAI_UACNUMBER		double
 #define LUA_NUMBER_SCAN		"%lf"
 #define LUA_NUMBER_FMT		"%.14g"

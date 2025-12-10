@@ -190,7 +190,7 @@ static TValue *cpluaopen(lua_State *L, lua_CFunction dummy, void *ud)
   stack_init(L, L);
   /* NOBARRIER: State initialization, all objects are white. */
   setgcref(L->env, obj2gco(lj_tab_new(L, 0, LJ_MIN_GLOBAL)));
-  settabV(L, registry(L), lj_tab_new(L, 0, LJ_MIN_REGISTRY));
+  settabV(L, lua_registry(L), lj_tab_new(L, 0, LJ_MIN_REGISTRY));
   lj_str_init(L);
   lj_meta_init(L);
   lj_lex_init(L);
@@ -289,7 +289,7 @@ LUA_API lua_State *lua_newstate(lua_Alloc allocf, void *allocd)
   setgcref(g->uvhead.prev, obj2gco(&g->uvhead));
   setgcref(g->uvhead.next, obj2gco(&g->uvhead));
   g->str.mask = ~(MSize)0;
-  setnilV(registry(L));
+  setnilV(lua_registry(L));
   setnilV(&g->nilnode.val);
   setnilV(&g->nilnode.key);
 #if !LJ_GC64
@@ -310,6 +310,15 @@ LUA_API lua_State *lua_newstate(lua_Alloc allocf, void *allocd)
     return NULL;
   }
   L->status = LUA_OK;
+
+  /* SPRING additions, default to disabled functions */
+  g->fopen_func  = NULL;
+  g->popen_func  = NULL;
+  g->pclose_func = NULL;
+  g->system_func = NULL;
+  g->remove_func = NULL;
+  g->rename_func = NULL;
+
   return L;
 }
 

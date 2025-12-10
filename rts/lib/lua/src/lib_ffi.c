@@ -826,7 +826,7 @@ LJLIB_PUSH(top-2) LJLIB_SET(arch)
 /* Register FFI module as loaded. */
 static void ffi_register_module(lua_State *L)
 {
-  cTValue *tmp = lj_tab_getstr(tabV(registry(L)), lj_str_newlit(L, "_LOADED"));
+  cTValue *tmp = lj_tab_getstr(tabV(lua_registry(L)), lj_str_newlit(L, "_LOADED"));
   if (tmp && tvistab(tmp)) {
     GCtab *t = tabV(tmp);
     copyTV(L, lj_tab_setstr(L, t, lj_str_newlit(L, LUA_FFILIBNAME)), L->top-1);

@@ -26,6 +26,8 @@
 #include "lj_strscan.h"
 #include "lj_strfmt.h"
 
+#include <stdbool.h>
+
 /* -- Common helper functions --------------------------------------------- */
 
 #define lj_checkapi_slot(idx) \
@@ -45,7 +47,7 @@ static TValue *index2adr(lua_State *L, int idx)
     settabV(L, o, tabref(L->env));
     return o;
   } else if (idx == LUA_REGISTRYINDEX) {
-    return registry(L);
+    return lua_registry(L);
   } else {
     GCfunc *fn = curr_func(L);
     lj_checkapi(fn->c.gct == ~LJ_TFUNC && !isluafunc(fn),
@@ -348,7 +350,7 @@ LUA_API int lua_lessthan(lua_State *L, int idx1, int idx2)
   }
 }
 
-LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
+LUA_API lua_Number lua_tonumber_double(lua_State *L, int idx)
 {
   cTValue *o = index2adr(L, idx);
   TValue tmp;
@@ -376,7 +378,7 @@ LUA_API lua_Number lua_tonumberx(lua_State *L, int idx, int *ok)
   }
 }
 
-LUALIB_API lua_Number luaL_checknumber(lua_State *L, int idx)
+LUALIB_API lua_Number luaL_checknumber_double(lua_State *L, int idx)
 {
   cTValue *o = index2adr(L, idx);
   TValue tmp;
@@ -387,7 +389,7 @@ LUALIB_API lua_Number luaL_checknumber(lua_State *L, int idx)
   return numV(&tmp);
 }
 
-LUALIB_API lua_Number luaL_optnumber(lua_State *L, int idx, lua_Number def)
+LUALIB_API lua_Number luaL_optnumber_double(lua_State *L, int idx, lua_Number def)
 {
   cTValue *o = index2adr(L, idx);
   TValue tmp;
@@ -484,7 +486,7 @@ LUALIB_API lua_Integer luaL_optinteger(lua_State *L, int idx, lua_Integer def)
   return lj_num2int_type(n, lua_Integer);
 }
 
-LUA_API int lua_toboolean(lua_State *L, int idx)
+LUA_API bool lua_toboolean(lua_State *L, int idx)
 {
   cTValue *o = index2adr(L, idx);
   return tvistruecond(o);
@@ -621,7 +623,7 @@ LUA_API void lua_pushnil(lua_State *L)
   incr_top(L);
 }
 
-LUA_API void lua_pushnumber(lua_State *L, lua_Number n)
+LUA_API void lua_pushnumber_double(lua_State *L, lua_Number n)
 {
   setnumV(L->top, n);
   if (LJ_UNLIKELY(tvisnan(L->top)))
@@ -642,6 +644,22 @@ LUA_API void lua_pushlstring(lua_State *L, const char *str, size_t len)
   s = lj_str_new(L, str, len);
   setstrV(L, L->top, s);
   incr_top(L);
+}
+
+//SPRING
+LUA_API void lua_pushhstring (lua_State *L,
+                              StrHash h, const char *s, size_t len) {
+  // FIXME: This function currently does not use the hash 'h' parameter.
+  lua_pushlstring(L, s, len);
+}
+
+//SPRING 
+LUALIB_API float luaL_checknumber_noassert (lua_State *L, int narg) {
+  float d = (float)lua_tonumber_double(L, narg);
+  if (d == 0 && !lua_isnumber(L, narg))  /* avoid extra test when d is not 0 */
+    luaL_typerror(L, narg, lua_typename(L, LUA_TNUMBER));
+
+  return d;
 }
 
 LUA_API void lua_pushstring(lua_State *L, const char *str)
@@ -714,7 +732,7 @@ LUA_API void lua_createtable(lua_State *L, int narray, int nrec)
 
 LUALIB_API int luaL_newmetatable(lua_State *L, const char *tname)
 {
-  GCtab *regt = tabV(registry(L));
+  GCtab *regt = tabV(lua_registry(L));
   TValue *tv = lj_tab_setstr(L, regt, lj_str_newz(L, tname));
   if (tvisnil(tv)) {
     GCtab *mt = lj_tab_new(L, 0, 1);
@@ -932,7 +950,7 @@ LUALIB_API void *luaL_testudata(lua_State *L, int idx, const char *tname)
   cTValue *o = index2adr(L, idx);
   if (tvisudata(o)) {
     GCudata *ud = udataV(o);
-    cTValue *tv = lj_tab_getstr(tabV(registry(L)), lj_str_newz(L, tname));
+    cTValue *tv = lj_tab_getstr(tabV(lua_registry(L)), lj_str_newz(L, tname));
     if (tv && tvistab(tv) && tabV(tv) == tabref(ud->metatable))
       return uddata(ud);
   }
@@ -1093,6 +1111,40 @@ LUA_API const char *lua_setupvalue(lua_State *L, int idx, int n)
   }
   return name;
 }
+
+
+/* SPRING syscall additions */
+LUA_API void lua_set_fopen(lua_State* L, lua_Func_fopen func) {
+  G(L)->fopen_func = func;
+}
+
+
+LUA_API void lua_set_popen(lua_State* L, lua_Func_popen popen_func,
+                                         lua_Func_pclose pclose_func) {
+  if (popen_func && pclose_func) {
+    G(L)->popen_func  = popen_func;
+    G(L)->pclose_func = pclose_func;
+  } else {
+    G(L)->popen_func  = NULL;
+    G(L)->pclose_func = NULL;
+  }
+}
+
+
+LUA_API void lua_set_system(lua_State* L, lua_Func_system func) {
+  G(L)->system_func = func;
+}
+
+
+LUA_API void lua_set_remove(lua_State* L, lua_Func_remove func) {
+  G(L)->remove_func = func;
+}
+
+
+LUA_API void lua_set_rename(lua_State* L, lua_Func_rename func) {
+  G(L)->rename_func = func;
+}
+/* END SPRING syscall additions */
 
 /* -- Calls --------------------------------------------------------------- */
 

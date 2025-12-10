@@ -11,10 +11,10 @@
 
 #include <stdarg.h>
 #include <stddef.h>
-
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "luaconf.h"
-
 
 #define LUA_VERSION	"Lua 5.1"
 #define LUA_RELEASE	"Lua 5.1.4"
@@ -104,6 +104,22 @@ typedef LUA_NUMBER lua_Number;
 typedef LUA_INTEGER lua_Integer;
 
 
+/*
+** SPRING additions for io access security
+*/
+#include <stdio.h>
+typedef FILE* (*lua_Func_fopen)(lua_State* L, const char* path, const char* mode);
+typedef FILE* (*lua_Func_popen)(lua_State* L, const char* command, const char* type);
+typedef int   (*lua_Func_pclose)(lua_State* L, FILE* stream);
+typedef int   (*lua_Func_system)(lua_State* L, const char* command);
+typedef int   (*lua_Func_remove)(lua_State* L, const char* pathname);
+typedef int   (*lua_Func_rename)(lua_State* L, const char* oldpath, const char* newpath);
+LUA_API void lua_set_fopen(lua_State* L, lua_Func_fopen);
+LUA_API void lua_set_popen(lua_State* L, lua_Func_popen, lua_Func_pclose);
+LUA_API void lua_set_system(lua_State* L, lua_Func_system);
+LUA_API void lua_set_remove(lua_State* L, lua_Func_remove);
+LUA_API void lua_set_rename(lua_State* L, lua_Func_rename);
+
 
 /*
 ** state manipulation
@@ -144,9 +160,9 @@ LUA_API int            (lua_equal) (lua_State *L, int idx1, int idx2);
 LUA_API int            (lua_rawequal) (lua_State *L, int idx1, int idx2);
 LUA_API int            (lua_lessthan) (lua_State *L, int idx1, int idx2);
 
-LUA_API lua_Number      (lua_tonumber) (lua_State *L, int idx);
+LUA_API lua_Number      (lua_tonumber_double) (lua_State *L, int idx);
 LUA_API lua_Integer     (lua_tointeger) (lua_State *L, int idx);
-LUA_API int             (lua_toboolean) (lua_State *L, int idx);
+LUA_API bool             (lua_toboolean) (lua_State *L, int idx);
 LUA_API const char     *(lua_tolstring) (lua_State *L, int idx, size_t *len);
 LUA_API size_t          (lua_objlen) (lua_State *L, int idx);
 LUA_API lua_CFunction   (lua_tocfunction) (lua_State *L, int idx);
@@ -159,7 +175,7 @@ LUA_API const void     *(lua_topointer) (lua_State *L, int idx);
 ** push functions (C -> stack)
 */
 LUA_API void  (lua_pushnil) (lua_State *L);
-LUA_API void  (lua_pushnumber) (lua_State *L, lua_Number n);
+LUA_API void  (lua_pushnumber_double) (lua_State *L, lua_Number n);
 LUA_API void  (lua_pushinteger) (lua_State *L, lua_Integer n);
 LUA_API void  (lua_pushlstring) (lua_State *L, const char *s, size_t l);
 LUA_API void  (lua_pushstring) (lua_State *L, const char *s);
@@ -245,6 +261,11 @@ LUA_API void  (lua_concat) (lua_State *L, int n);
 LUA_API lua_Alloc (lua_getallocf) (lua_State *L, void **ud);
 LUA_API void lua_setallocf (lua_State *L, lua_Alloc f, void *ud);
 
+// SPRING
+LUA_API uint32_t (lua_calchash) (const char *str, size_t l);
+
+LUA_API void  (lua_pushhstring) (lua_State *L,
+                                 uint32_t h, const char *s, size_t l);
 
 
 /*

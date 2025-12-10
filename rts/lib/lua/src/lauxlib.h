@@ -15,6 +15,8 @@
 #include "lua.h"
 
 
+// #define luaI_openlib	luaL_openlib
+
 /* extra error code for `luaL_load' */
 #define LUA_ERRFILE     (LUA_ERRERR+1)
 
@@ -35,8 +37,10 @@ LUALIB_API const char *(luaL_checklstring) (lua_State *L, int numArg,
                                                           size_t *l);
 LUALIB_API const char *(luaL_optlstring) (lua_State *L, int numArg,
                                           const char *def, size_t *l);
-LUALIB_API lua_Number (luaL_checknumber) (lua_State *L, int numArg);
-LUALIB_API lua_Number (luaL_optnumber) (lua_State *L, int nArg, lua_Number def);
+/* SPRING  */
+LUALIB_API lua_Number (luaL_checknumber_double) (lua_State *L, int numArg);
+LUALIB_API float (luaL_checknumber_noassert) (lua_State *L, int numArg);
+LUALIB_API lua_Number (luaL_optnumber_double) (lua_State *L, int nArg, lua_Number def);
 
 LUALIB_API lua_Integer (luaL_checkinteger) (lua_State *L, int numArg);
 LUALIB_API lua_Integer (luaL_optinteger) (lua_State *L, int nArg,
